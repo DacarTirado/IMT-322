@@ -1,0 +1,83 @@
+import RPi.GPIO as GPIO
+import time
+
+# Configuración de pines GPIO
+GPIO.setmode(GPIO.BCM)
+
+# Pines de los pulsadores
+BTN_OPEN = 17
+BTN_CLOSE = 27
+BTN_LOCK = 22
+
+# Pines de los LEDs
+LED_CLOSED = 5
+LED_OPEN = 6
+LED_LOCKED = 13
+
+# Configuración de los pines
+GPIO.setup(BTN_OPEN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTN_CLOSE, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTN_LOCK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+GPIO.setup(LED_CLOSED, GPIO.OUT)
+GPIO.setup(LED_OPEN, GPIO.OUT)
+GPIO.setup(LED_LOCKED, GPIO.OUT)
+
+# Estado inicial de la puerta
+state = "CLOSED"
+GPIO.output(LED_CLOSED, GPIO.HIGH)
+GPIO.output(LED_OPEN, GPIO.LOW)
+GPIO.output(LED_LOCKED, GPIO.LOW)
+
+# Variables para antirrebote
+debounce_time = 200  # 200 ms
+last_open_time = 0
+last_close_time = 0
+last_lock_time = 0
+
+# Contraseña para bloqueo/desbloqueo
+PASSWORD = "1234"
+entered_password = ""
+
+def update_leds():
+    GPIO.output(LED_CLOSED, GPIO.HIGH if state == "CLOSED" else GPIO.LOW)
+    GPIO.output(LED_OPEN, GPIO.HIGH if state == "OPEN" else GPIO.LOW)
+    GPIO.output(LED_LOCKED, GPIO.HIGH if state == "LOCKED" else GPIO.LOW)
+    print(f"Door is {state}")
+
+def check_password():
+    global entered_password
+    entered_password = input("Enter password: ")
+    if entered_password == PASSWORD:
+        return True
+    else:
+        print("Incorrect password")
+        return False
+
+try:
+while True:
+        current_time = int(time.time() * 1000)
+
+        if GPIO.input(BTN_OPEN) == GPIO.LOW and (current_time - last_open_time)>
+            if state == "CLOSED":
+                state = "OPEN"
+                update_leds()
+            last_open_time = current_time
+
+        elif GPIO.input(BTN_CLOSE) == GPIO.LOW and (current_time - last_close_t>
+            if state == "OPEN":
+                state = "CLOSED"
+                update_leds()
+            last_close_time = current_time
+
+        elif GPIO.input(BTN_LOCK) == GPIO.LOW and (current_time - last_lock_tim>
+            if state == "CLOSED" and check_password():
+                state = "LOCKED"
+update_leds()
+            last_lock_time = current_time
+
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    GPIO.cleanup()
+
